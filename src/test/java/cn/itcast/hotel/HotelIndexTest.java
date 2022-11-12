@@ -57,6 +57,9 @@ public class HotelIndexTest {
         client.indices().delete(request, RequestOptions.DEFAULT);
     }
 
+    /**
+     * 初始化client
+     */
     @BeforeEach
     void setUp() {
         this.client = new RestHighLevelClient(RestClient.builder(
@@ -64,6 +67,9 @@ public class HotelIndexTest {
         ));
     }
 
+    /**
+     * 关闭client
+     */
     @AfterEach
     void tearDown() throws IOException {
         this.client.close();

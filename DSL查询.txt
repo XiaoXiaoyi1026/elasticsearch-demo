@@ -254,7 +254,88 @@ GET /hotel/_search
   }
 }
 
+# bool 查询 must和should要参与算分 must_not和filter不参与算分
+GET /hotel/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "name": "如家"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "range": {
+            "price": {
+              "gt": 400
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "geo_distance": {
+            "distance": "10km",
+            "location": {
+              "lat": 31.21,
+              "lon": 121.5
+            }
+          }
+        }
+      ]
+    }
+  }
+}
 
 
+# sort排序(对查询结果, 指定了sort后就不会打分了, _score为null)
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "score": "desc"
+    },
+    {
+      "price": "asc"
+    }
+  ]
+}
 
+# 分页查询, es默认要求查询的所有记录数不超过10000(from + size <= 10000)
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "price": "asc"
+    }
+  ],
+  "from": 0,
+  "size": 10
+}
+
+# 高亮查询, es默认需要查询字段和高亮字段一致
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "all": "如家"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "name": {
+        "require_field_match": "false"
+      }
+    }
+  }
+}
 

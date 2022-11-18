@@ -224,9 +224,35 @@ GET /hotel/_search
 }
 
 
+# distance查询(查询以location为圆心, 以distance为半径的符合条件的geo_point文档)
+GET /hotel/_search
+{
+  "query": {
+    "geo_distance": {
+      "distance": "15km",
+      "location": "31.21, 121.5"
+    }
+  }
+}
 
-
-
+# geo_bounding_box查询(查询一个矩形范围内的)
+GET /hotel/_search 
+{
+  "query": {
+    "geo_bounding_box": {
+      "location": {
+        "top_left": {
+          "lat": 32.1,
+          "lon": 121.5
+        },
+        "bottom_right": {
+          "lat": 30.9,
+          "lon": 121.7
+        }
+      }
+    }
+  }
+}
 
 
 

@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IHotelService extends IService<Hotel> {
     /**
      * 分页查询
+     * @param params 前端参数
      * @return 一页hotel
      */
     PageResult search(RequestParams params);

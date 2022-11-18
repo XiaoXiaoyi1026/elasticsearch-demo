@@ -1,0 +1,234 @@
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# 模拟请求es
+GET /
+
+# 测试分词器
+POST /_analyze
+{
+  "analyzer": "ik_max_word",
+  "text": ["黑马程序员学习java太棒了"]
+}
+
+# 测试分词器
+POST /_analyze
+{
+  "analyzer": "ik_smart",
+  "text": ["我是小小易，我在黑马程序员学习java， 加油！奥利给的！！！"]
+}
+
+# 创建索引库
+PUT /xiaoxiaoyi
+{
+  "mappings": {
+    "properties": {
+      "info": {
+        "type": "text",
+        "analyzer": "ik_smart"
+      },
+      "email": {
+        "type": "keyword",
+        "index": false
+      },
+      "name": {
+        "properties": {
+          "firstName": {
+            "type": "keyword"
+          },
+          "lastName": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+
+# 查询索引库
+GET /xiaoxiaoyi
+
+# 删除索引库
+DELETE /xiaoxiaoyi
+
+# 修改索引库(添加属性)
+PUT /xiaoxiaoyi/_mapping 
+{
+  "properties": {
+    "age": {
+      "type": "long"
+    }
+  }
+}
+
+# 插入新文档
+POST /xiaoxiaoyi/_doc/1
+{
+  "age": 18,
+  "email": "xiaoxiaoyi1026@gmail.com",
+  "info": "小小易",
+  "name": {
+    "firstName": "小易",
+    "lastName": "小"
+  }
+}
+
+# 查询文档
+GET /xiaoxiaoyi/_doc/1
+
+# 删除文档
+DELETE /xiaoxiaoyi/_doc/1
+
+
+# 全量修改文档(覆盖)
+PUT /xiaoxiaoyi/_doc/1
+{
+  "age": 22,
+  "email": "xxy1026@gmail.com",
+  "info": "小易",
+  "name": {
+    "firstName": "易",
+    "lastName": "小"
+  }
+}
+
+# 局部修改文档内容
+POST /xiaoxiaoyi/_update/1
+{
+  "doc": {
+    "age": 1
+  }
+}
+
+PUT /hotel
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "name": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "copy_to": "all"
+      },
+      "address": {
+        "type": "keyword",
+        "index": false
+      },
+      "price": {
+        "type": "integer",
+        "copy_to": "all"
+      },
+      "score": {
+        "type": "integer",
+        "copy_to": "all"
+      },
+      "brand": {
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city": {
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "starName": {
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "bushiness": {
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "location": {
+        "type": "geo_point",
+        "copy_to": "all"
+      },
+      "pic": {
+        "type": "keyword",
+        "index": false
+      },
+      "all": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      }
+    }
+  }
+}
+
+GET /hotel
+
+GET /hotel/_doc/56227
+
+GET /hotel/_search
+
+# 查询所有
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {
+      
+    }
+  }
+}
+
+# match条件查询(全文查询)
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "all": "上海外滩"
+    }
+  }
+}
+
+# multi_match多字段条件匹配
+GET /hotel/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "外滩如家",
+      "fields": ["brand", "name", "bushiness"]
+    }
+  }
+}
+
+
+# term精确查询
+GET /hotel/_search
+{
+  "query": {
+    "term": {
+      "city": {
+        "value": "上海"
+      }
+    }
+  }
+}
+
+# range范围精确查询 gt 大于 gte 大于等于 lt 小于 lte 小于等于
+GET /hotel/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 100,
+        "lt": 259
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+

@@ -12,9 +12,16 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @SpringBootTest
@@ -130,6 +138,62 @@ public class HotelSearchTest {
                 }
             }
             System.out.println(hotelDoc);
+        }
+    }
+
+    @Test
+    void testAggregation() throws IOException {
+        // 1. 准备request
+        SearchRequest request = new SearchRequest("hotel");
+        // 2. 准备DSL
+        // 2.1. 去掉文档数据
+        request.source().size(0);
+        // 2.2. 聚合
+        request.source().aggregation(
+                AggregationBuilders.terms("brandAgg")
+                        .field("brand")
+                        .size(20)
+        );
+        // 3. 发送请求
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        // 4. 处理结果
+        Aggregations aggregations = response.getAggregations();
+        // 4.1. 获取terms
+        Terms brandTerms = aggregations.get("brandAgg");
+        // 4.2. 获取buckets
+        List<? extends Terms.Bucket> buckets = brandTerms.getBuckets();
+        // 4.3. 遍历buckets
+        for (Terms.Bucket bucket : buckets) {
+            // 4.4. 从bucket中拿到想要的字段值
+            String key = bucket.getKeyAsString();
+            System.out.println(key);
+        }
+    }
+
+    @Test
+    void testSuggestion() throws IOException {
+        // 1. 准备request
+        SearchRequest request = new SearchRequest("hotel");
+        // 2. 准备DSL
+        request.source().suggest(new SuggestBuilder().addSuggestion(
+                "suggestions",
+                SuggestBuilders.completionSuggestion("suggestion")
+                        .size(10)
+                        .prefix("sz")
+                        .skipDuplicates(true)
+        ));
+        // 3. 发送请求
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        // 4. 处理结果
+        Suggest suggest = response.getSuggest();
+        // 4.1. 根据名称获取对应的suggestion
+        CompletionSuggestion suggestion = suggest.getSuggestion("suggestions");
+        // 4.2. 获取options
+        List<CompletionSuggestion.Entry.Option> options = suggestion.getOptions();
+        // 4.3. 遍历取值
+        for (CompletionSuggestion.Entry.Option option : options) {
+            String text = String.valueOf(option.getText());
+            System.out.println(text);
         }
     }
 

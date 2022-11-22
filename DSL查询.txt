@@ -1,3 +1,4 @@
+# 查询所有
 GET _search
 {
   "query": {
@@ -339,3 +340,326 @@ GET /hotel/_search
   }
 }
 
+# 为几条数据添加isAD字段
+POST /hotel/_update/365011120
+{
+  "doc": {
+    "isAD": true
+  }
+}
+
+POST /hotel/_update/593228
+{
+  "doc": {
+    "isAD": true
+  }
+}
+
+POST /hotel/_update/415659
+{
+  "doc": {
+    "isAD": true
+  }
+}
+
+POST /hotel/_update/706343
+{
+  "doc": {
+    "isAD": true
+  }
+}
+
+# 聚合功能 三要素: 聚合名称 聚合类型 聚合字段
+GET /hotel/_search
+{
+  "size": 0,
+  "aggs": {
+    "brandAgg": {
+      "terms": {
+        "field": "brand",
+        "size": 20
+      }
+    }
+  }
+}
+
+# 聚合功能 自定义排序规则
+GET /hotel/_search
+{
+  "size": 0,
+  "aggs": {
+    "brandAgg": {
+      "terms": {
+        "field": "brand",
+        "order": {
+          "_count": "asc"
+        },
+        "size": 20
+      }
+    }
+  }
+}
+
+
+# 聚合功能 限定聚合范围
+GET /hotel/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "lt": 200
+      }
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "brandAgg": {
+      "terms": {
+        "field": "brand",
+        "size": 20
+      }
+    }
+  }
+}
+
+
+# 聚合嵌套功能, 在聚合的基础上再聚合 metric
+GET /hotel/_search
+{
+  "size": 0,
+  "aggs": {
+    "brandAgg": {
+      "terms": {
+        "field": "brand",
+        "size": 20,
+        "order": {
+            "scoreAgg.avg": "desc"
+        }
+      },
+      "aggs": {
+        "scoreAgg": {
+          "stats": {
+            "field": "score"
+          }
+        }
+      }
+    }
+  }
+}
+
+# 测试elastic search 启动成功与否
+GET /
+
+# 测试分词器(拼音分词器)
+POST /test/_analyze
+{
+  "text": ["如家酒店还不错"],
+  "analyzer": "my_analyzer"
+}
+
+// 自定义拼音分词器
+PUT /test
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "ik_max_word",
+          "filter": "py"
+        }
+      },
+      "filter": {
+        "py": {
+          "type": "pinyin",
+          "keep_full_pinyin": false,
+          "keep_joined_full_pinyin": true,
+          "keep_original": true,
+          "limit_first_letter_length": 16,
+          "remove_duplicated_term": true,
+          "none_chinese_pinyin_tokenize": false
+        }
+      }
+    }
+  },
+  "mappings": {
+      "properties": {
+        "name": {
+          "type": "text",
+          "analyzer": "my_analyzer",
+          "search_analyzer": "ik_smart"
+        }
+      }
+    }
+}
+
+POST /test/_doc/1
+{
+  "id": 1,
+  "name": "狮子"
+}
+POST /test/_doc/2
+{
+  "id": 2,
+  "name": "虱子"
+}
+
+# 定义搜索和分词用不同的分词器
+GET /test/_search
+{
+  "query": {
+    "match": {
+      "name": "掉入狮子笼咋办"
+    }
+  }
+}
+
+# 自动补全索引
+PUT test2
+{
+  "mappings": {
+    "properties": {
+      "title":{
+        "type": "completion"
+      }
+    }
+  }
+}
+
+# 测试数据
+POST test2/_doc
+{
+  "title": ["Sony", "WH-1000XM3"]
+}
+POST test2/_doc
+{
+  "title": ["SK-II", "PITERA"]
+}
+POST test2/_doc
+{
+  "title": ["Nintendo", "switch"]
+}
+
+# 自动补全查询
+POST /test2/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "text": "s",
+      "completion": {
+        "field": "title",
+        "skip_duplicates": true,
+        "size": 10
+      }
+    }
+  }
+}
+
+# 获取索引结构
+GET hotel/_mapping
+
+# 删除索引
+DELETE /hotel
+
+# 重新创建自动补全的酒店索引
+PUT /hotel
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "text_analyzer": {
+          "tokenizer": "ik_max_word",
+          "filter": "py"
+        },
+        "completion_analyzer": {
+          "tokenizer": "keyword",
+          "filter": "py"
+        }
+      },
+      "filter": {
+        "py": {
+          "type": "pinyin",
+          "keep_full_pinyin": false,
+          "keep_joined_full_pinyin": true,
+          "keep_original": true,
+          "limit_first_letter_length": 16,
+          "remove_duplicated_term": true,
+          "none_chinese_pinyin_tokenize": false
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id":{
+        "type": "keyword"
+      },
+      "name":{
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "search_analyzer": "ik_smart",
+        "copy_to": "all"
+      },
+      "address":{
+        "type": "keyword",
+        "index": false
+      },
+      "price":{
+        "type": "integer"
+      },
+      "score":{
+        "type": "integer"
+      },
+      "brand":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city":{
+        "type": "keyword"
+      },
+      "starName":{
+        "type": "keyword"
+      },
+      "business":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "location":{
+        "type": "geo_point"
+      },
+      "pic":{
+        "type": "keyword",
+        "index": false
+      },
+      "all":{
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "search_analyzer": "ik_smart"
+      },
+      "suggestion":{
+          "type": "completion",
+          "analyzer": "completion_analyzer"
+      }
+    }
+  }
+}
+
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /hotel/_search
+{
+  "suggest": {
+    "suggestions": {
+      "text": "sd",
+      "completion": {
+        "field": "suggestion",
+        "skip_duplicates": true,
+        "size": 10
+      }
+    }
+  }
+}

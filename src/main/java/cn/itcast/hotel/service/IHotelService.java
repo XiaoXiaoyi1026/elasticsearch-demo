@@ -35,4 +35,17 @@ public interface IHotelService extends IService<Hotel> {
      * @return 关联词集合
      */
     List<String> getSuggestion(String prefix);
+
+    /**
+     * 根据id插入酒店
+     * @param id 酒店id
+     */
+    void insertById(Long id);
+
+    /**
+     * 根据id删除酒店
+     *
+     * @param id 酒店id
+     */
+    void deleteById(Long id);
 }
